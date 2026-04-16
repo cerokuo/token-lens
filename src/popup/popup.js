@@ -36,6 +36,8 @@ const els = {
   gaugeUnit:        $('gaugeUnit'),
   inputTokens:      $('inputTokens'),
   outputTokens:     $('outputTokens'),
+  sessionCostCard:  $('sessionCostCard'),
+  sessionCost:      $('sessionCost'),
   efficiencyValue:  $('efficiencyValue'),
   efficiencyBar:    $('efficiencyBar'),
   fillerPct:        $('fillerPct'),
@@ -179,6 +181,14 @@ function render(data) {
   // Meta cards
   els.inputTokens.textContent  = formatTokens(data.inputTokens);
   els.outputTokens.textContent = formatTokens(data.outputTokens);
+
+  // Est. Cost: only meaningful when exact token counts come from the API
+  if (data.dataSource === 'api') {
+    els.sessionCostCard.style.display = '';
+    els.sessionCost.textContent = data.cost ? data.cost.formatted : '$0.0000';
+  } else {
+    els.sessionCostCard.style.display = 'none';
+  }
 
   // Efficiency
   const score = data.efficiencyScore || 0;
