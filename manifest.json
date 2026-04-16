@@ -42,6 +42,7 @@
         "src/core/redundancy-detector.js",
         "src/core/storage.js",
         "src/core/api-client.js",
+        "src/core/quota-tracker.js",
         "src/content/platform-detector.js",
         "src/content/dom-extractor.js",
         "src/content/content.js"

@@ -133,6 +133,37 @@
         <p class="key-feedback" id="feedback-gemini"></p>
       </section>
 
+      <!-- Usage limits -->
+      <section class="key-section" id="section-limits">
+        <div class="key-header">
+          <div class="key-platform">
+            <span class="platform-dot dot-claude"></span>
+            <div>
+              <h2 class="key-title">Claude Usage Limits</h2>
+              <p class="key-desc">Set your estimated token limits so TokenLens can show how much you have left. Anthropic doesn't publish exact numbers — adjust based on when you actually get blocked.</p>
+            </div>
+          </div>
+          <span class="key-status" id="status-limits">Defaults</span>
+        </div>
+        <div class="limits-grid">
+          <div class="limit-field">
+            <label class="limit-label" for="input-fiveHour">5-hour window (tokens)</label>
+            <input type="number" id="input-fiveHour" class="key-input" value="1000000" min="1000" step="100000" />
+            <p class="limit-hint">Default: 1,000,000 — increase if you rarely get blocked</p>
+          </div>
+          <div class="limit-field">
+            <label class="limit-label" for="input-weekly">Weekly limit (tokens)</label>
+            <input type="number" id="input-weekly" class="key-input" value="5000000" min="1000" step="500000" />
+            <p class="limit-hint">Default: 5,000,000 — rough estimate for Claude Pro</p>
+          </div>
+        </div>
+        <div class="key-actions">
+          <button class="btn-save" id="btn-save-limits">Save limits</button>
+          <button class="btn-clear" id="btn-reset-limits">Reset to defaults</button>
+        </div>
+        <p class="key-feedback" id="feedback-limits"></p>
+      </section>
+
       <!-- OpenAI note -->
       <section class="key-section note-section">
         <div class="key-header">
@@ -152,6 +183,7 @@
 
   <script src="../core/storage.js"></script>
   <script src="../core/api-client.js"></script>
+  <script src="../core/quota-tracker.js"></script>
   <script src="settings.js"></script>
 </body>
 </html>

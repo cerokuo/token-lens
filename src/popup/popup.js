@@ -163,6 +163,9 @@ function render(data) {
   // Data source badge
   renderSourceBadge(data.dataSource);
 
+  // Quota
+  renderQuota(data);
+
   // Platform pill
   const dotClass = PLATFORM_COLORS[data.platform] || '';
   els.platformDot.className = `platform-dot ${dotClass}`;
@@ -215,6 +218,73 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   });
 });
 
+// ── Quota rendering ───────────────────────────────────────────────────────
+const $id = id => document.getElementById(id);
+
+function formatTokensShort(n) {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000)     return `${Math.round(n / 1_000)}K`;
+  return String(n);
+}
+
+function formatMinutes(mins) {
+  if (mins === null) return '';
+  if (mins < 60) return `~${mins}m left`;
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return m > 0 ? `~${h}h ${m}m left` : `~${h}h left`;
+}
+
+function setQuotaBar(barId, pct) {
+  const bar = $id(barId);
+  if (!bar) return;
+  bar.style.width = `${Math.min(pct, 100)}%`;
+  const cls = pct >= 90 ? 'danger' : pct >= 70 ? 'warn' : '';
+  // Keep base class, update state class
+  bar.className = bar.className.replace(/ ?(warn|danger)/g, '').trim();
+  if (cls) bar.className += ` ${cls}`;
+}
+
+function renderQuota(data) {
+  const section = $id('quotaSection');
+  if (!section) return;
+
+  // Only show for Claude — that's where we have limit context
+  if (data.platform !== 'claude' || !data.quota) {
+    section.style.display = 'none';
+    return;
+  }
+
+  section.style.display = 'flex';
+
+  const { fiveHour, weekly, burnPerMin, minutesUntilBlocked } = data.quota;
+
+  // Blocked warning
+  const blockedEl = $id('quotaBlocked');
+  if (data.limitWarning?.blocked) {
+    blockedEl.style.display = 'flex';
+    const ms = data.limitWarning.resetInMs;
+    if (ms > 0) {
+      const h = Math.floor(ms / 3_600_000);
+      const m = Math.floor((ms % 3_600_000) / 60_000);
+      $id('blockedReset').textContent = `Resets in ${h > 0 ? h + 'h ' : ''}${m}m`;
+    }
+  } else {
+    blockedEl.style.display = 'none';
+  }
+
+  // 5-hour bar
+  $id('fiveHourVals').textContent = `${formatTokensShort(fiveHour.used)} / ${formatTokensShort(fiveHour.limit)}`;
+  setQuotaBar('fiveHourBar', fiveHour.pct);
+  $id('fiveHourRemaining').textContent = formatTokensShort(fiveHour.remaining);
+  $id('fiveHourBurn').textContent = minutesUntilBlocked !== null ? formatMinutes(minutesUntilBlocked) : '';
+
+  // Weekly bar
+  $id('weeklyVals').textContent = `${formatTokensShort(weekly.used)} / ${formatTokensShort(weekly.limit)}`;
+  setQuotaBar('weeklyBar', weekly.pct);
+  $id('weeklyRemaining').textContent = formatTokensShort(weekly.remaining);
+}
+
 // ── Source badge ──────────────────────────────────────────────────────────
 const SOURCE_CONFIG = {
   api:       { label: 'API',   cls: 'source-api',  title: 'Exact counts from API' },
@@ -231,6 +301,10 @@ function renderSourceBadge(dataSource) {
 
 // ── Settings button ───────────────────────────────────────────────────────
 els.settingsBtn.addEventListener('click', () => chrome.runtime.openOptionsPage());
+
+document.addEventListener('click', e => {
+  if (e.target.id === 'quotaSettingsLink') chrome.runtime.openOptionsPage();
+});
 
 // ── Bootstrap ─────────────────────────────────────────────────────────────
 function bootstrap() {

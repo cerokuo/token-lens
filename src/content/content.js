@@ -102,7 +102,12 @@
 
   function analyzeAndBroadcast() {
     const data = analyzeConversation();
-    if (data) broadcast(data);
+    if (!data) return;
+
+    // Attach quota asynchronously — fires broadcast again once ready
+    TL.QuotaTracker.getUsageSummary(data.platform).then(quota => {
+      broadcast({ ...data, quota, limitWarning });
+    }).catch(() => broadcast(data));
   }
 
   // ── API-key-based counting (fires when popup opens) ────────────────────────
@@ -136,13 +141,56 @@
     if (typeof d.inputTokens !== 'number' || typeof d.outputTokens !== 'number') return;
     if (d.inputTokens < 0 || d.outputTokens < 0) return;
 
-    interceptReading = {
-      inputTokens:  Math.floor(d.inputTokens),
-      outputTokens: Math.floor(d.outputTokens),
-      timestamp:    Date.now()
-    };
+    const input  = Math.floor(d.inputTokens);
+    const output = Math.floor(d.outputTokens);
+
+    interceptReading = { inputTokens: input, outputTokens: output, timestamp: Date.now() };
+
+    // Record to quota tracker for rolling window accounting
+    const platform = TL.PlatformDetector.getCurrentPlatform();
+    if (platform) TL.QuotaTracker.recordTokens(platform, input, output).catch(() => {});
+
     analyzeAndBroadcast();
   });
+
+  // ── Claude limit warning DOM watcher ──────────────────────────────────────
+  // When Claude shows its native "usage limit reached" message, parse the
+  // countdown so we can surface it in the popup.
+  let limitWarning = null;
+
+  const LIMIT_PATTERNS = [
+    /you['']ve reached your usage limit/i,
+    /usage limit reached/i,
+    /you['']ve hit your usage limit/i
+  ];
+  const RESET_PATTERN = /resets?\s+in\s+(?:(\d+)\s*h(?:ours?)?)?\s*(?:(\d+)\s*m(?:in(?:utes?)?)?)?/i;
+
+  function scanForLimitWarning() {
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    let node;
+    while ((node = walker.nextNode())) {
+      const text = node.textContent || '';
+      if (LIMIT_PATTERNS.some(p => p.test(text))) {
+        const resetMatch = text.match(RESET_PATTERN)
+          || (node.parentElement?.closest('[class]')?.innerText || '').match(RESET_PATTERN);
+        const hours   = parseInt(resetMatch?.[1] || '0', 10);
+        const minutes = parseInt(resetMatch?.[2] || '0', 10);
+        limitWarning = {
+          blocked:    true,
+          resetInMs:  (hours * 60 + minutes) * 60 * 1000,
+          detectedAt: Date.now()
+        };
+        analyzeAndBroadcast();
+        return;
+      }
+    }
+    // Clear stale warning if message is gone from DOM
+    if (limitWarning) { limitWarning = null; analyzeAndBroadcast(); }
+  }
+
+  // Scan after each assistant message arrives
+  const limitObserver = new MutationObserver(() => setTimeout(scanForLimitWarning, 500));
+  limitObserver.observe(document.body, { childList: true, subtree: true });
 
   // ── Real-time input listener ───────────────────────────────────────────────
   function onInputChange() {
@@ -177,8 +225,15 @@
     if (msg.type === 'GET_ANALYSIS') {
       const dom  = buildDomReading();
       const data = dom ? selectDataSource(dom) : null;
-      sendResponse({ data });
-      // Fire API count asynchronously — result will arrive on next broadcast
+
+      // Attach quota summary asynchronously then re-broadcast
+      if (data && data.platform) {
+        TL.QuotaTracker.getUsageSummary(data.platform).then(quota => {
+          broadcast({ ...data, quota, limitWarning });
+        }).catch(() => {});
+      }
+
+      sendResponse({ data: data ? { ...data, limitWarning } : null });
       if (dom) triggerApiCountIfAvailable(dom);
     }
     return true;

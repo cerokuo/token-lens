@@ -316,6 +316,34 @@ button:disabled {
   cursor: not-allowed;
 }
 
+/* ── Limits grid ── */
+.limits-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.limit-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.limit-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--muted);
+}
+
+.limit-hint {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
 /* ── Feedback line ── */
 .key-feedback {
   font-size: 12px;

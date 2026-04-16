@@ -129,5 +129,38 @@ document.querySelectorAll('.btn-clear').forEach(btn => {
   });
 });
 
+// ── Quota limits ─────────────────────────────────────────────────────────
+async function loadSavedLimits() {
+  const limits = await TL.QuotaTracker.getLimits();
+  const fiveEl = document.getElementById('input-fiveHour');
+  const weekEl = document.getElementById('input-weekly');
+  if (fiveEl) fiveEl.value = limits.fiveHour;
+  if (weekEl) weekEl.value = limits.weekly;
+}
+
+document.getElementById('btn-save-limits')?.addEventListener('click', async () => {
+  const fiveHour = parseInt(document.getElementById('input-fiveHour')?.value, 10);
+  const weekly   = parseInt(document.getElementById('input-weekly')?.value,   10);
+
+  try {
+    await TL.QuotaTracker.setLimits(fiveHour, weekly);
+    document.getElementById('status-limits').textContent  = 'Saved';
+    document.getElementById('status-limits').className    = 'key-status status-saved';
+    setFeedback('limits', 'Limits saved. The popup will reflect these on next open.', 'success');
+  } catch (e) {
+    setFeedback('limits', `Error: ${e.message}`, 'error');
+  }
+});
+
+document.getElementById('btn-reset-limits')?.addEventListener('click', async () => {
+  await TL.QuotaTracker.setLimits(1_000_000, 5_000_000);
+  document.getElementById('input-fiveHour').value = 1_000_000;
+  document.getElementById('input-weekly').value   = 5_000_000;
+  document.getElementById('status-limits').textContent = 'Defaults';
+  document.getElementById('status-limits').className   = 'key-status';
+  setFeedback('limits', 'Reset to defaults.', 'success');
+});
+
 // ── Init ─────────────────────────────────────────────────────────────────
 loadSavedKeys();
+loadSavedLimits();

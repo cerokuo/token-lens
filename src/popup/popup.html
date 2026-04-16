@@ -31,10 +31,9 @@
           <span class="platform-dot" id="platformDot"></span>
           <span id="platformName">—</span>
         </div>
-        <button class="settings-btn" id="settingsBtn" title="API key settings" aria-label="Open settings">
-          <svg viewBox="0 0 20 20" fill="none" width="15" height="15">
-            <path d="M10 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" stroke="currentColor" stroke-width="1.5"/>
-            <path d="M10 2v1.5M10 16.5V18M3.22 5.22l1.06 1.06M15.72 13.72l1.06 1.06M2 10h1.5M16.5 10H18M3.22 14.78l1.06-1.06M15.72 6.28l1.06-1.06" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        <button class="settings-btn" id="settingsBtn" title="Settings" aria-label="Open settings">
+          <svg viewBox="0 0 20 20" fill="none" width="16" height="16">
+            <path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
           </svg>
         </button>
       </div>
@@ -110,6 +109,55 @@
           <span>0</span>
           <span class="model-tag" id="modelTag">—</span>
           <span id="contextLimitLabel">—</span>
+        </div>
+      </section>
+
+      <!-- Quota section (Claude only) -->
+      <section class="quota-section" id="quotaSection" style="display:none">
+
+        <!-- Blocked warning banner -->
+        <div class="quota-blocked" id="quotaBlocked" style="display:none">
+          <span class="blocked-icon">⊘</span>
+          <div>
+            <strong>Usage limit reached</strong>
+            <span class="blocked-reset" id="blockedReset"></span>
+          </div>
+        </div>
+
+        <!-- 5-hour window -->
+        <div class="quota-row">
+          <div class="quota-label-row">
+            <span class="quota-label">5-hour window</span>
+            <span class="quota-right">
+              <span class="quota-vals" id="fiveHourVals">— / —</span>
+              <span class="quota-burn" id="fiveHourBurn"></span>
+            </span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill quota-fill" id="fiveHourBar" style="width:0%"></div>
+          </div>
+          <div class="quota-sub">
+            <span id="fiveHourRemaining">—</span> remaining
+          </div>
+        </div>
+
+        <!-- Weekly -->
+        <div class="quota-row quota-row-weekly">
+          <div class="quota-label-row">
+            <span class="quota-label">This week</span>
+            <span class="quota-vals" id="weeklyVals">— / —</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill quota-fill quota-fill-weekly" id="weeklyBar" style="width:0%"></div>
+          </div>
+          <div class="quota-sub">
+            <span id="weeklyRemaining">—</span> remaining
+          </div>
+        </div>
+
+        <div class="quota-footnote">
+          Limits are estimates — set yours in
+          <button class="quota-settings-link" id="quotaSettingsLink">Settings</button>
         </div>
       </section>
 

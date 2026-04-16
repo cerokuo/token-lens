@@ -435,6 +435,126 @@ body {
   padding: 1px 6px;
 }
 
+/* ── Quota section ── */
+.quota-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--surface);
+  padding: 14px 16px;
+}
+
+.quota-blocked {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(244,63,94,0.1);
+  border: 1px solid rgba(244,63,94,0.25);
+  border-radius: 8px;
+  padding: 10px 12px;
+  animation: fadeIn 0.3s ease;
+}
+
+.blocked-icon {
+  font-size: 18px;
+  color: var(--red);
+  flex-shrink: 0;
+}
+
+.quota-blocked strong {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--red);
+  display: block;
+}
+
+.blocked-reset {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 1px;
+}
+
+.quota-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.quota-row-weekly {
+  opacity: 0.85;
+}
+
+.quota-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.quota-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+}
+
+.quota-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.quota-vals {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.quota-burn {
+  font-size: 10px;
+  color: var(--amber);
+  font-weight: 600;
+}
+
+.quota-fill {
+  background: linear-gradient(90deg, var(--accent-2), #a5b4fc);
+  box-shadow: 0 0 8px rgba(99,102,241,0.3);
+  transition: width 0.8s cubic-bezier(0.34,1.56,0.64,1), background 0.4s;
+}
+
+.quota-fill.warn   { background: linear-gradient(90deg, var(--amber), #fcd34d); box-shadow: 0 0 8px rgba(245,158,11,0.35); }
+.quota-fill.danger { background: linear-gradient(90deg, var(--red),   #fb7185); box-shadow: 0 0 8px rgba(244,63,94,0.35); }
+
+.quota-fill-weekly {
+  background: linear-gradient(90deg, #6366f1aa, #818cf8aa);
+  box-shadow: none;
+}
+
+.quota-sub {
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.quota-footnote {
+  font-size: 10px;
+  color: var(--muted);
+  text-align: center;
+  padding-top: 2px;
+}
+
+.quota-settings-link {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 /* ── Tabs ── */
 .tab-nav {
   display: flex;
