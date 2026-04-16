@@ -36,8 +36,6 @@ const els = {
   gaugeUnit:        $('gaugeUnit'),
   inputTokens:      $('inputTokens'),
   outputTokens:     $('outputTokens'),
-  tokensRemaining:  $('tokensRemaining'),
-  sessionCost:      $('sessionCost'),
   efficiencyValue:  $('efficiencyValue'),
   efficiencyBar:    $('efficiencyBar'),
   fillerPct:        $('fillerPct'),
@@ -179,11 +177,8 @@ function render(data) {
   els.gaugeUnit.textContent = data.totalTokens === 1 ? 'token' : 'tokens';
 
   // Meta cards
-  els.inputTokens.textContent     = formatTokens(data.inputTokens);
-  els.outputTokens.textContent    = formatTokens(data.outputTokens);
-  const remaining = data.contextLimit - data.totalTokens;
-  els.tokensRemaining.textContent = remaining > 0 ? formatTokens(remaining) : 'Full';
-  els.sessionCost.textContent     = data.cost ? data.cost.formatted : '$0.0000';
+  els.inputTokens.textContent  = formatTokens(data.inputTokens);
+  els.outputTokens.textContent = formatTokens(data.outputTokens);
 
   // Efficiency
   const score = data.efficiencyScore || 0;
