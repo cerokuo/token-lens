@@ -8,13 +8,26 @@
         '[data-testid="user-message"]',
         '.font-user-message',
         '[class*="human-turn"] p',
-        '[class*="HumanTurn"] p'
+        '[class*="HumanTurn"] p',
+        // Broader fallbacks for newer Claude.ai builds
+        '[class*="Human"] .whitespace-pre-wrap',
+        '.whitespace-pre-wrap[class*="user"]',
+        '[data-message-author-role="user"]',
+        '[class*="rounded-3xl"] .whitespace-pre-wrap'
       ],
       aiMessages: [
         '[data-testid="assistant-message"]',
         '.font-claude-message',
         '[class*="assistant-message"] p',
-        '[class*="AssistantMessage"] p'
+        '[class*="AssistantMessage"] p',
+        // Broader fallbacks — Claude.ai renders AI output as markdown prose
+        '.prose p',
+        '[class*="prose"] p',
+        '[data-message-author-role="assistant"] p',
+        '[class*="Claude"] .whitespace-pre-wrap',
+        '[class*="Assistant"] .whitespace-pre-wrap',
+        // Final catch-all: any paragraph inside main that isn't user input
+        'main .prose'
       ],
       input: [
         'div[contenteditable="true"][data-placeholder]',

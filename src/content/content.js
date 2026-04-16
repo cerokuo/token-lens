@@ -7,6 +7,10 @@
   let interceptReading = null; // { inputTokens, outputTokens, timestamp } from injected.js
   let apiReading       = null; // { inputTokens, outputTokens, timestamp } from api-client.js
 
+  // Track last-recorded state so DOM path only records deltas (new messages)
+  let lastRecordedMsgCount   = 0;
+  let lastRecordedTotalTokens = 0;
+
   // Staleness thresholds
   const API_TTL       = 30_000;  // 30s
   const INTERCEPT_TTL = 60_000;  // 60s
@@ -100,9 +104,37 @@
     try { chrome.runtime.sendMessage({ type: 'ANALYSIS_UPDATE', data }); } catch (_) {}
   }
 
+  // ── DOM-path quota recording ───────────────────────────────────────────────
+  // When neither the API key nor the network interceptor is active, we record
+  // token deltas from the DOM estimate so the 5-hour / weekly bars still fill.
+  // We only record when the message count increases (new turn completed) to
+  // avoid double-counting tokens that were already recorded by the interceptor.
+  function maybeRecordDomTokens(data) {
+    const now = Date.now();
+
+    // Skip: interceptor fired recently — it's more accurate
+    if (interceptReading && (now - interceptReading.timestamp) < 30_000) return;
+
+    const msgCount = (data.messageCount?.user || 0) + (data.messageCount?.ai || 0);
+
+    // Skip: no new messages since last record
+    if (msgCount <= lastRecordedMsgCount) return;
+
+    // Record only the incremental tokens since last snapshot
+    const delta = Math.max(0, data.totalTokens - lastRecordedTotalTokens);
+    if (delta > 0) {
+      TL.QuotaTracker.recordTokens(data.platform, delta, 0).catch(() => {});
+    }
+
+    lastRecordedMsgCount    = msgCount;
+    lastRecordedTotalTokens = data.totalTokens;
+  }
+
   function analyzeAndBroadcast() {
     const data = analyzeConversation();
     if (!data) return;
+
+    maybeRecordDomTokens(data);
 
     // Attach quota asynchronously — fires broadcast again once ready
     TL.QuotaTracker.getUsageSummary(data.platform).then(quota => {
