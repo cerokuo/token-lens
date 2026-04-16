@@ -221,22 +221,26 @@
   }
 
   // ── Popup message handler ──────────────────────────────────────────────────
+  // Await quota BEFORE calling sendResponse so the popup's first render
+  // already has real data — no race condition.
   chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     if (msg.type === 'GET_ANALYSIS') {
       const dom  = buildDomReading();
       const data = dom ? selectDataSource(dom) : null;
 
-      // Attach quota summary asynchronously then re-broadcast
       if (data && data.platform) {
-        TL.QuotaTracker.getUsageSummary(data.platform).then(quota => {
-          broadcast({ ...data, quota, limitWarning });
-        }).catch(() => {});
+        TL.QuotaTracker.getUsageSummary(data.platform)
+          .then(quota => {
+            sendResponse({ data: { ...data, quota, limitWarning } });
+          })
+          .catch(() => sendResponse({ data: { ...data, limitWarning } }));
+      } else {
+        sendResponse({ data });
       }
 
-      sendResponse({ data: data ? { ...data, limitWarning } : null });
       if (dom) triggerApiCountIfAvailable(dom);
     }
-    return true;
+    return true; // keep message channel open for async sendResponse
   });
 
   // ── Bootstrap ─────────────────────────────────────────────────────────────

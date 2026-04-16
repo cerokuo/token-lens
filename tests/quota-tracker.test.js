@@ -160,7 +160,7 @@ describe('QuotaTracker.getUsageSummary', () => {
   });
 
   it('clamps pct to 100 when over limit', async () => {
-    mockLocal['quotaLimits'] = { fiveHour: 1000, weekly: 5000000 };
+    mockLocal['quotaLimits_claude'] = { fiveHour: 1000, weekly: 5000000 };
     const summary = await QuotaTracker.getUsageSummary('claude');
     expect(summary.fiveHour.pct).toBe(100);
   });
@@ -175,15 +175,89 @@ describe('QuotaTracker limits', () => {
   });
 
   it('stores and retrieves custom limits', async () => {
-    await QuotaTracker.setLimits(500000, 2000000);
-    const limits = await QuotaTracker.getLimits();
+    await QuotaTracker.setLimits(500000, 2000000, 'claude');
+    const limits = await QuotaTracker.getLimits('claude');
     expect(limits.fiveHour).toBe(500000);
     expect(limits.weekly).toBe(2000000);
   });
 
   it('rejects non-positive limits', async () => {
-    await expect(QuotaTracker.setLimits(0, 1000000)).rejects.toThrow();
-    await expect(QuotaTracker.setLimits(-1, 1000000)).rejects.toThrow();
+    await expect(QuotaTracker.setLimits(0,  1000000, 'claude')).rejects.toThrow();
+    await expect(QuotaTracker.setLimits(-1, 1000000, 'claude')).rejects.toThrow();
+  });
+});
+
+// ── getThresholdStatus ────────────────────────────────────────────────────
+describe('QuotaTracker.getThresholdStatus', () => {
+  it('returns "ok" when under 75%', () => {
+    expect(QuotaTracker.getThresholdStatus(50)).toBe('ok');
+    expect(QuotaTracker.getThresholdStatus(74)).toBe('ok');
+  });
+
+  it('returns "warning" at 75%', () => {
+    expect(QuotaTracker.getThresholdStatus(75)).toBe('warning');
+    expect(QuotaTracker.getThresholdStatus(89)).toBe('warning');
+  });
+
+  it('returns "critical" at 90%', () => {
+    expect(QuotaTracker.getThresholdStatus(90)).toBe('critical');
+    expect(QuotaTracker.getThresholdStatus(99)).toBe('critical');
+  });
+
+  it('returns "exceeded" at 100%', () => {
+    expect(QuotaTracker.getThresholdStatus(100)).toBe('exceeded');
+    expect(QuotaTracker.getThresholdStatus(150)).toBe('exceeded');
+  });
+});
+
+// ── getDefaultLimits (per platform) ───────────────────────────────────────
+describe('QuotaTracker.getDefaultLimits', () => {
+  it('returns claude defaults', () => {
+    const d = QuotaTracker.getDefaultLimits('claude');
+    expect(d.fiveHour).toBeGreaterThan(0);
+    expect(d.weekly).toBeGreaterThan(0);
+  });
+
+  it('returns openai defaults', () => {
+    const d = QuotaTracker.getDefaultLimits('openai');
+    expect(d.fiveHour).toBeGreaterThan(0);
+    expect(d.weekly).toBeGreaterThan(0);
+  });
+
+  it('returns gemini defaults', () => {
+    const d = QuotaTracker.getDefaultLimits('gemini');
+    expect(d.fiveHour).toBeGreaterThan(0);
+    expect(d.weekly).toBeGreaterThan(0);
+  });
+});
+
+// ── threshold warnings surfaced in summary ────────────────────────────────
+describe('QuotaTracker quota warning in summary', () => {
+  it('fiveHour.status is "exceeded" when usage > limit', async () => {
+    mockLocal['tokenEvents'] = [
+      { timestamp: NOW - 1000, inputTokens: 50, outputTokens: 0, platform: 'claude' }
+    ];
+    mockLocal['quotaLimits_claude'] = { fiveHour: 12, weekly: 100 };
+    const summary = await QuotaTracker.getUsageSummary('claude');
+    expect(summary.fiveHour.status).toBe('exceeded');
+  });
+
+  it('fiveHour.status is "warning" at 75%', async () => {
+    mockLocal['tokenEvents'] = [
+      { timestamp: NOW - 1000, inputTokens: 8, outputTokens: 0, platform: 'claude' }
+    ];
+    mockLocal['quotaLimits_claude'] = { fiveHour: 10, weekly: 100 };
+    const summary = await QuotaTracker.getUsageSummary('claude');
+    expect(summary.fiveHour.status).toBe('warning');
+  });
+
+  it('fiveHour.status is "ok" when well under limit', async () => {
+    mockLocal['tokenEvents'] = [
+      { timestamp: NOW - 1000, inputTokens: 2, outputTokens: 0, platform: 'claude' }
+    ];
+    mockLocal['quotaLimits_claude'] = { fiveHour: 100, weekly: 1000 };
+    const summary = await QuotaTracker.getUsageSummary('claude');
+    expect(summary.fiveHour.status).toBe('ok');
   });
 });
 

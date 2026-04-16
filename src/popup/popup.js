@@ -235,53 +235,83 @@ function formatMinutes(mins) {
   return m > 0 ? `~${h}h ${m}m left` : `~${h}h left`;
 }
 
-function setQuotaBar(barId, pct) {
+function setQuotaBar(barId, pct, status) {
   const bar = $id(barId);
   if (!bar) return;
   bar.style.width = `${Math.min(pct, 100)}%`;
-  const cls = pct >= 90 ? 'danger' : pct >= 70 ? 'warn' : '';
-  // Keep base class, update state class
+  const cls = STATUS_COLORS[status] || '';
   bar.className = bar.className.replace(/ ?(warn|danger)/g, '').trim();
   if (cls) bar.className += ` ${cls}`;
 }
+
+const STATUS_COLORS = {
+  ok:       '',
+  warning:  'warn',
+  critical: 'danger',
+  exceeded: 'danger'
+};
+
+const STATUS_LABELS = {
+  ok:       '',
+  warning:  'Approaching limit',
+  critical: 'Almost full',
+  exceeded: 'Limit exceeded'
+};
 
 function renderQuota(data) {
   const section = $id('quotaSection');
   if (!section) return;
 
-  // Only show for Claude — that's where we have limit context
-  if (data.platform !== 'claude' || !data.quota) {
-    section.style.display = 'none';
-    return;
-  }
+  if (!data.quota) { section.style.display = 'none'; return; }
 
   section.style.display = 'flex';
 
-  const { fiveHour, weekly, burnPerMin, minutesUntilBlocked } = data.quota;
+  const { fiveHour, weekly, minutesUntilBlocked } = data.quota;
+  const fiveStatus = fiveHour.status || 'ok';
+  const wkStatus   = weekly.status   || 'ok';
 
-  // Blocked warning
+  // ── Blocked / warning banner ───────────────────────────────────────────
   const blockedEl = $id('quotaBlocked');
-  if (data.limitWarning?.blocked) {
+  const isExceeded = fiveStatus === 'exceeded' || data.limitWarning?.blocked;
+  const isWarning  = !isExceeded && (fiveStatus === 'warning' || fiveStatus === 'critical');
+
+  if (isExceeded) {
     blockedEl.style.display = 'flex';
-    const ms = data.limitWarning.resetInMs;
+    blockedEl.style.background = 'rgba(244,63,94,0.1)';
+    blockedEl.style.borderColor = 'rgba(244,63,94,0.25)';
+    $id('quotaBlocked').querySelector('.blocked-icon').textContent = '⊘';
+    $id('quotaBlocked').querySelector('strong').textContent = 'Usage limit reached';
+
+    const ms = data.limitWarning?.resetInMs;
     if (ms > 0) {
       const h = Math.floor(ms / 3_600_000);
       const m = Math.floor((ms % 3_600_000) / 60_000);
       $id('blockedReset').textContent = `Resets in ${h > 0 ? h + 'h ' : ''}${m}m`;
+    } else {
+      $id('blockedReset').textContent = 'Resets in ~5h from first message';
     }
+  } else if (isWarning) {
+    blockedEl.style.display = 'flex';
+    blockedEl.style.background = 'rgba(245,158,11,0.08)';
+    blockedEl.style.borderColor = 'rgba(245,158,11,0.2)';
+    $id('quotaBlocked').querySelector('.blocked-icon').textContent = '⚠';
+    $id('quotaBlocked').querySelector('strong').textContent = STATUS_LABELS[fiveStatus];
+    $id('blockedReset').textContent = minutesUntilBlocked !== null
+      ? `At current rate, limit reached in ${formatMinutes(minutesUntilBlocked).replace('~','').replace(' left','')}`
+      : '';
   } else {
     blockedEl.style.display = 'none';
   }
 
-  // 5-hour bar
-  $id('fiveHourVals').textContent = `${formatTokensShort(fiveHour.used)} / ${formatTokensShort(fiveHour.limit)}`;
-  setQuotaBar('fiveHourBar', fiveHour.pct);
+  // ── 5-hour bar ─────────────────────────────────────────────────────────
+  $id('fiveHourVals').textContent      = `${formatTokensShort(fiveHour.used)} / ${formatTokensShort(fiveHour.limit)}`;
+  setQuotaBar('fiveHourBar', fiveHour.pct, fiveStatus);
   $id('fiveHourRemaining').textContent = formatTokensShort(fiveHour.remaining);
-  $id('fiveHourBurn').textContent = minutesUntilBlocked !== null ? formatMinutes(minutesUntilBlocked) : '';
+  $id('fiveHourBurn').textContent      = minutesUntilBlocked !== null ? formatMinutes(minutesUntilBlocked) : '';
 
-  // Weekly bar
-  $id('weeklyVals').textContent = `${formatTokensShort(weekly.used)} / ${formatTokensShort(weekly.limit)}`;
-  setQuotaBar('weeklyBar', weekly.pct);
+  // ── Weekly bar ─────────────────────────────────────────────────────────
+  $id('weeklyVals').textContent      = `${formatTokensShort(weekly.used)} / ${formatTokensShort(weekly.limit)}`;
+  setQuotaBar('weeklyBar', weekly.pct, wkStatus);
   $id('weeklyRemaining').textContent = formatTokensShort(weekly.remaining);
 }
 
@@ -304,6 +334,14 @@ els.settingsBtn.addEventListener('click', () => chrome.runtime.openOptionsPage()
 
 document.addEventListener('click', e => {
   if (e.target.id === 'quotaSettingsLink') chrome.runtime.openOptionsPage();
+});
+
+// ── Live broadcast listener ───────────────────────────────────────────────
+// Receives ANALYSIS_UPDATE pushed by content.js (intercept hits, API results,
+// quota updates). This is what makes the popup update in real time without
+// waiting for the 3s poll cycle.
+chrome.runtime.onMessage.addListener((msg) => {
+  if (msg.type === 'ANALYSIS_UPDATE' && msg.data) render(msg.data);
 });
 
 // ── Bootstrap ─────────────────────────────────────────────────────────────
