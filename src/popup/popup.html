@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TokenLens</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="app">
+
+    <!-- ── Header ── -->
+    <header class="header">
+      <div class="brand">
+        <svg class="brand-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="10" stroke="url(#g1)" stroke-width="2"/>
+          <circle cx="12" cy="12" r="5" fill="url(#g1)" opacity="0.8"/>
+          <circle cx="12" cy="12" r="2" fill="white"/>
+          <defs>
+            <linearGradient id="g1" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#818CF8"/>
+              <stop offset="100%" stop-color="#6366F1"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <span class="brand-name">TokenLens</span>
+      </div>
+      <div class="header-right">
+        <span class="source-badge source-est" id="sourceBadge" title="Data source">~Est</span>
+        <div class="platform-pill" id="platformPill">
+          <span class="platform-dot" id="platformDot"></span>
+          <span id="platformName">—</span>
+        </div>
+        <button class="settings-btn" id="settingsBtn" title="API key settings" aria-label="Open settings">
+          <svg viewBox="0 0 20 20" fill="none" width="15" height="15">
+            <path d="M10 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M10 2v1.5M10 16.5V18M3.22 5.22l1.06 1.06M15.72 13.72l1.06 1.06M2 10h1.5M16.5 10H18M3.22 14.78l1.06-1.06M15.72 6.28l1.06-1.06" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- ── Empty state ── -->
+    <div class="empty-state" id="emptyState">
+      <div class="empty-orb"></div>
+      <p class="empty-title">No AI session detected</p>
+      <p class="empty-sub">Open Claude, ChatGPT, or Gemini<br/>to start tracking tokens.</p>
+    </div>
+
+    <!-- ── Main ── -->
+    <main class="main" id="mainContent" style="display:none">
+
+      <!-- Gauge + meta row -->
+      <section class="gauge-section">
+        <div class="gauge-wrap">
+          <svg class="gauge-svg" viewBox="0 0 140 140">
+            <circle class="gauge-track" cx="70" cy="70" r="56"/>
+            <circle class="gauge-arc"   cx="70" cy="70" r="56" id="gaugeArc"/>
+            <circle class="gauge-glow"  cx="70" cy="70" r="56" id="gaugeGlow"/>
+            <text class="gauge-num"  id="gaugeNum"  x="70" y="64" text-anchor="middle">0</text>
+            <text class="gauge-unit" id="gaugeUnit" x="70" y="80" text-anchor="middle">tokens</text>
+          </svg>
+        </div>
+        <div class="meta-col">
+          <div class="meta-card">
+            <span class="meta-label">Input</span>
+            <span class="meta-val" id="inputTokens">0</span>
+          </div>
+          <div class="meta-card">
+            <span class="meta-label">Output</span>
+            <span class="meta-val" id="outputTokens">0</span>
+          </div>
+          <div class="meta-card">
+            <span class="meta-label">Remaining</span>
+            <span class="meta-val accent" id="tokensRemaining">—</span>
+          </div>
+          <div class="meta-card highlight">
+            <span class="meta-label">Session cost</span>
+            <span class="meta-val cost" id="sessionCost">$0.0000</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Efficiency score -->
+      <section class="score-section">
+        <div class="score-row">
+          <span class="score-label">Prompt Efficiency</span>
+          <span class="score-value" id="efficiencyValue">—</span>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill efficiency-fill" id="efficiencyBar"></div>
+        </div>
+        <div class="score-sub">
+          <span><span class="pill-filler" id="fillerPct">0%</span> filler words</span>
+          <span id="msgCount">0 messages</span>
+        </div>
+      </section>
+
+      <!-- Context window burn -->
+      <section class="context-section">
+        <div class="context-row">
+          <span class="context-label">Context Window</span>
+          <span class="context-pct" id="contextPct">0%</span>
+        </div>
+        <div class="bar-track context-track">
+          <div class="bar-fill context-fill" id="contextBar"></div>
+          <div class="context-warn-zone"></div>
+        </div>
+        <div class="context-limits">
+          <span>0</span>
+          <span class="model-tag" id="modelTag">—</span>
+          <span id="contextLimitLabel">—</span>
+        </div>
+      </section>
+
+      <!-- Tabs -->
+      <nav class="tab-nav">
+        <button class="tab-btn active" data-tab="words">Top Words</button>
+        <button class="tab-btn" data-tab="optimize">Optimize</button>
+        <button class="tab-btn" data-tab="redundancy">Redundancy</button>
+      </nav>
+
+      <!-- Tab: Top Words -->
+      <section class="tab-panel active" id="tab-words">
+        <div class="words-grid" id="wordsGrid">
+          <div class="panel-empty">Start a conversation to see your top words</div>
+        </div>
+      </section>
+
+      <!-- Tab: Optimize -->
+      <section class="tab-panel" id="tab-optimize">
+        <div class="suggestions-list" id="suggestionsList">
+          <div class="panel-empty panel-good">
+            <span class="good-icon">✓</span> Your prompt looks clean
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab: Redundancy -->
+      <section class="tab-panel" id="tab-redundancy">
+        <div class="redundancy-list" id="redundancyList">
+          <div class="panel-empty">No repeated phrases detected</div>
+        </div>
+      </section>
+
+    </main>
+
+    <footer class="footer" id="footer" style="display:none">
+      <span class="footer-model" id="footerModel">—</span>
+      <span class="footer-time" id="footerTime">—</span>
+    </footer>
+  </div>
+
+  <script src="../core/token-counter.js"></script>
+  <script src="../core/text-analyzer.js"></script>
+  <script src="../core/cost-calculator.js"></script>
+  <script src="../core/redundancy-detector.js"></script>
+  <script src="../content/platform-detector.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

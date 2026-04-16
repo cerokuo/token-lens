@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TokenLens — Settings</title>
+  <link rel="stylesheet" href="settings.css" />
+</head>
+<body>
+  <div class="page">
+
+    <header class="page-header">
+      <div class="brand">
+        <svg class="brand-icon" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" stroke="url(#g1)" stroke-width="2"/>
+          <circle cx="12" cy="12" r="5" fill="url(#g1)" opacity="0.8"/>
+          <circle cx="12" cy="12" r="2" fill="white"/>
+          <defs>
+            <linearGradient id="g1" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#818CF8"/>
+              <stop offset="100%" stop-color="#6366F1"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div>
+          <h1 class="page-title">TokenLens</h1>
+          <p class="page-sub">API Key Settings</p>
+        </div>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- Data source explainer -->
+      <section class="explainer">
+        <h2 class="section-title">How data sources work</h2>
+        <div class="source-ladder">
+          <div class="ladder-item ladder-api">
+            <span class="ladder-badge">API</span>
+            <div>
+              <strong>API keys provided</strong>
+              <p>Calls the platform's official token-counting endpoint. Most accurate — exact counts from the model itself.</p>
+            </div>
+          </div>
+          <div class="ladder-arrow">↓ fallback if no key</div>
+          <div class="ladder-item ladder-live">
+            <span class="ladder-badge">Live</span>
+            <div>
+              <strong>Network interception</strong>
+              <p>Reads token counts from the platform's own API responses in real time. Exact, no key needed.</p>
+            </div>
+          </div>
+          <div class="ladder-arrow">↓ fallback if no response yet</div>
+          <div class="ladder-item ladder-est">
+            <span class="ladder-badge">~Est</span>
+            <div>
+              <strong>DOM estimation</strong>
+              <p>Counts tokens from the visible text using a BPE approximation. Always available, ~95% accurate.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Anthropic / Claude -->
+      <section class="key-section" id="section-anthropic">
+        <div class="key-header">
+          <div class="key-platform">
+            <span class="platform-dot dot-claude"></span>
+            <div>
+              <h2 class="key-title">Claude (Anthropic)</h2>
+              <p class="key-desc">Used for exact token counting via <code>/v1/messages/count_tokens</code></p>
+            </div>
+          </div>
+          <span class="key-status" id="status-anthropic">Not set</span>
+        </div>
+        <div class="key-input-row">
+          <input
+            type="password"
+            id="input-anthropic"
+            class="key-input"
+            placeholder="sk-ant-api03-…"
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <button class="toggle-btn" data-target="input-anthropic" aria-label="Show/hide key">
+            <svg viewBox="0 0 20 20" fill="none" width="16" height="16">
+              <path d="M10 4C5.58 4 2 10 2 10s3.58 6 8 6 8-6 8-6-3.58-6-8-6z" stroke="currentColor" stroke-width="1.5"/>
+              <circle cx="10" cy="10" r="2.5" stroke="currentColor" stroke-width="1.5"/>
+            </svg>
+          </button>
+        </div>
+        <div class="key-actions">
+          <button class="btn-save" data-platform="anthropic">Save key</button>
+          <button class="btn-test" data-platform="anthropic">Test connection</button>
+          <button class="btn-clear" data-platform="anthropic">Clear</button>
+        </div>
+        <p class="key-feedback" id="feedback-anthropic"></p>
+      </section>
+
+      <!-- Gemini -->
+      <section class="key-section" id="section-gemini">
+        <div class="key-header">
+          <div class="key-platform">
+            <span class="platform-dot dot-gemini"></span>
+            <div>
+              <h2 class="key-title">Gemini (Google)</h2>
+              <p class="key-desc">Used for exact token counting via <code>:countTokens</code></p>
+            </div>
+          </div>
+          <span class="key-status" id="status-gemini">Not set</span>
+        </div>
+        <div class="key-input-row">
+          <input
+            type="password"
+            id="input-gemini"
+            class="key-input"
+            placeholder="AIzaSy…"
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <button class="toggle-btn" data-target="input-gemini" aria-label="Show/hide key">
+            <svg viewBox="0 0 20 20" fill="none" width="16" height="16">
+              <path d="M10 4C5.58 4 2 10 2 10s3.58 6 8 6 8-6 8-6-3.58-6-8-6z" stroke="currentColor" stroke-width="1.5"/>
+              <circle cx="10" cy="10" r="2.5" stroke="currentColor" stroke-width="1.5"/>
+            </svg>
+          </button>
+        </div>
+        <div class="key-actions">
+          <button class="btn-save" data-platform="gemini">Save key</button>
+          <button class="btn-test" data-platform="gemini">Test connection</button>
+          <button class="btn-clear" data-platform="gemini">Clear</button>
+        </div>
+        <p class="key-feedback" id="feedback-gemini"></p>
+      </section>
+
+      <!-- OpenAI note -->
+      <section class="key-section note-section">
+        <div class="key-header">
+          <div class="key-platform">
+            <span class="platform-dot dot-openai"></span>
+            <div>
+              <h2 class="key-title">ChatGPT (OpenAI)</h2>
+              <p class="key-desc">No API key needed — OpenAI doesn't expose a <code>count_tokens</code> endpoint. TokenLens reads exact counts directly from ChatGPT's own API responses in your browser.</p>
+            </div>
+          </div>
+          <span class="key-status status-auto">Auto (Live)</span>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <script src="../core/storage.js"></script>
+  <script src="../core/api-client.js"></script>
+  <script src="settings.js"></script>
+</body>
+</html>
