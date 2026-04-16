@@ -111,7 +111,7 @@
       <!-- Quota section (Claude only) -->
       <section class="quota-section" id="quotaSection" style="display:none">
 
-        <!-- Blocked warning banner -->
+        <!-- Blocked / warning banner -->
         <div class="quota-blocked" id="quotaBlocked" style="display:none">
           <span class="blocked-icon">⊘</span>
           <div>
@@ -120,28 +120,14 @@
           </div>
         </div>
 
-        <!-- 5-hour window -->
+        <!-- Weekly compact row -->
         <div class="quota-row">
           <div class="quota-label-row">
-            <span class="quota-label">5-hour window</span>
-            <span class="quota-right">
-              <span class="quota-vals" id="fiveHourVals">— / —</span>
-              <span class="quota-burn" id="fiveHourBurn"></span>
-            </span>
-          </div>
-          <div class="bar-track">
-            <div class="bar-fill quota-fill" id="fiveHourBar" style="width:0%"></div>
-          </div>
-          <div class="quota-sub">
-            <span id="fiveHourRemaining">—</span> remaining
-          </div>
-        </div>
-
-        <!-- Weekly -->
-        <div class="quota-row quota-row-weekly">
-          <div class="quota-label-row">
             <span class="quota-label">This week</span>
-            <span class="quota-vals" id="weeklyVals">— / —</span>
+            <span class="quota-right">
+              <span class="quota-vals" id="weeklyVals">— / —</span>
+              <span class="quota-burn" id="weeklyBurn"></span>
+            </span>
           </div>
           <div class="bar-track">
             <div class="bar-fill quota-fill quota-fill-weekly" id="weeklyBar" style="width:0%"></div>

@@ -172,11 +172,21 @@ function render(data) {
   const cfg = window.TokenLens.PlatformDetector.getPlatformConfig(data.platform);
   els.platformName.textContent = cfg ? cfg.name : data.platform;
 
-  // Gauge
-  const usagePct = data.contextUsage || 0;
-  setGauge(usagePct);
-  els.gaugeNum.textContent  = formatTokens(data.totalTokens);
-  els.gaugeUnit.textContent = data.totalTokens === 1 ? 'token' : 'tokens';
+  // Gauge — shows 5-hour quota when available, falls back to context usage
+  let gaugePct, gaugeNum, gaugeUnit;
+  if (data.quota?.fiveHour) {
+    const fh  = data.quota.fiveHour;
+    gaugePct  = fh.pct;
+    gaugeNum  = formatTokens(fh.remaining);
+    gaugeUnit = 'left in 5h';
+  } else {
+    gaugePct  = data.contextUsage || 0;
+    gaugeNum  = formatTokens(data.totalTokens);
+    gaugeUnit = data.totalTokens === 1 ? 'token' : 'tokens';
+  }
+  setGauge(gaugePct);
+  els.gaugeNum.textContent  = gaugeNum;
+  els.gaugeUnit.textContent = gaugeUnit;
 
   // Meta cards
   els.inputTokens.textContent  = formatTokens(data.inputTokens);
@@ -276,17 +286,16 @@ function renderQuota(data) {
   const wkStatus   = weekly.status   || 'ok';
 
   // ── Blocked / warning banner ───────────────────────────────────────────
-  const blockedEl = $id('quotaBlocked');
+  const blockedEl  = $id('quotaBlocked');
   const isExceeded = fiveStatus === 'exceeded' || data.limitWarning?.blocked;
   const isWarning  = !isExceeded && (fiveStatus === 'warning' || fiveStatus === 'critical');
 
   if (isExceeded) {
-    blockedEl.style.display = 'flex';
+    blockedEl.style.display    = 'flex';
     blockedEl.style.background = 'rgba(244,63,94,0.1)';
     blockedEl.style.borderColor = 'rgba(244,63,94,0.25)';
-    $id('quotaBlocked').querySelector('.blocked-icon').textContent = '⊘';
-    $id('quotaBlocked').querySelector('strong').textContent = 'Usage limit reached';
-
+    blockedEl.querySelector('.blocked-icon').textContent = '⊘';
+    blockedEl.querySelector('strong').textContent = 'Usage limit reached';
     const ms = data.limitWarning?.resetInMs;
     if (ms > 0) {
       const h = Math.floor(ms / 3_600_000);
@@ -296,28 +305,23 @@ function renderQuota(data) {
       $id('blockedReset').textContent = 'Resets in ~5h from first message';
     }
   } else if (isWarning) {
-    blockedEl.style.display = 'flex';
+    blockedEl.style.display    = 'flex';
     blockedEl.style.background = 'rgba(245,158,11,0.08)';
     blockedEl.style.borderColor = 'rgba(245,158,11,0.2)';
-    $id('quotaBlocked').querySelector('.blocked-icon').textContent = '⚠';
-    $id('quotaBlocked').querySelector('strong').textContent = STATUS_LABELS[fiveStatus];
+    blockedEl.querySelector('.blocked-icon').textContent = '⚠';
+    blockedEl.querySelector('strong').textContent = STATUS_LABELS[fiveStatus];
     $id('blockedReset').textContent = minutesUntilBlocked !== null
-      ? `At current rate, limit reached in ${formatMinutes(minutesUntilBlocked).replace('~','').replace(' left','')}`
+      ? `At current rate, limit in ${formatMinutes(minutesUntilBlocked).replace('~','').replace(' left','')}`
       : '';
   } else {
     blockedEl.style.display = 'none';
   }
 
-  // ── 5-hour bar ─────────────────────────────────────────────────────────
-  $id('fiveHourVals').textContent      = `${formatTokensShort(fiveHour.used)} / ${formatTokensShort(fiveHour.limit)}`;
-  setQuotaBar('fiveHourBar', fiveHour.pct, fiveStatus);
-  $id('fiveHourRemaining').textContent = formatTokensShort(fiveHour.remaining);
-  $id('fiveHourBurn').textContent      = minutesUntilBlocked !== null ? formatMinutes(minutesUntilBlocked) : '';
-
   // ── Weekly bar ─────────────────────────────────────────────────────────
   $id('weeklyVals').textContent      = `${formatTokensShort(weekly.used)} / ${formatTokensShort(weekly.limit)}`;
   setQuotaBar('weeklyBar', weekly.pct, wkStatus);
   $id('weeklyRemaining').textContent = formatTokensShort(weekly.remaining);
+  $id('weeklyBurn').textContent      = minutesUntilBlocked !== null ? formatMinutes(minutesUntilBlocked) : '';
 }
 
 // ── Source badge ──────────────────────────────────────────────────────────
