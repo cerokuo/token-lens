@@ -141,10 +141,13 @@
     },
 
     queryAll(selectors) {
+      const getText = el => (el.innerText || el.textContent || '').trim();
       for (const sel of selectors) {
         try {
-          const els = document.querySelectorAll(sel);
-          if (els.length > 0) return Array.from(els);
+          const els = Array.from(document.querySelectorAll(sel));
+          // Skip this selector if it matches elements but all have empty text —
+          // those are loading placeholders / structural wrappers, not real content.
+          if (els.length > 0 && els.some(el => getText(el).length > 0)) return els;
         } catch (_) {}
       }
       return [];

@@ -89,12 +89,19 @@ function setContextBar(pct) {
   els.contextBar.className = 'bar-fill context-fill ' + cls;
 }
 
+// Only write to innerHTML when the generated string has actually changed —
+// this prevents the 3-second poll from re-painting identical content, which
+// caused a visible flicker in the words/suggestions/redundancy panels.
+function setIfChanged(el, html) {
+  if (el.innerHTML !== html) el.innerHTML = html;
+}
+
 function renderWords(words) {
   if (!words || words.length === 0) {
-    els.wordsGrid.innerHTML = '<div class="panel-empty">Start a conversation to see your top words</div>';
+    setIfChanged(els.wordsGrid, '<div class="panel-empty">Start a conversation to see your top words</div>');
     return;
   }
-  els.wordsGrid.innerHTML = words
+  setIfChanged(els.wordsGrid, words
     .map(w => {
       const cls = w.isAIFiller ? 'filler' : w.isStopword ? 'stopword' : 'meaningful';
       const label = w.isAIFiller ? '⚠' : w.isStopword ? '' : '';
@@ -104,18 +111,18 @@ function renderWords(words) {
         <span class="word-count">${w.count}</span>
       </span>`;
     })
-    .join('');
+    .join(''));
 }
 
 function renderSuggestions(suggestions) {
   if (!suggestions || suggestions.length === 0) {
-    els.suggestionsList.innerHTML = `
+    setIfChanged(els.suggestionsList, `
       <div class="panel-empty panel-good">
         <span class="good-icon">✓</span> Your prompt looks clean
-      </div>`;
+      </div>`);
     return;
   }
-  els.suggestionsList.innerHTML = suggestions
+  setIfChanged(els.suggestionsList, suggestions
     .map(s => `
       <div class="suggestion-item">
         <div class="suggestion-icon">✕</div>
@@ -126,16 +133,16 @@ function renderSuggestions(suggestions) {
           <div class="suggestion-saving">Saves ~${s.count} token${s.count > 1 ? 's' : ''} per conversation</div>
         </div>
       </div>`)
-    .join('');
+    .join(''));
 }
 
 function renderRedundancy(redundancies) {
   if (!redundancies || redundancies.length === 0) {
-    els.redundancyList.innerHTML = '<div class="panel-empty">No repeated phrases detected</div>';
+    setIfChanged(els.redundancyList, '<div class="panel-empty">No repeated phrases detected</div>');
     return;
   }
   const suggestions = window.TokenLens.RedundancyDetector.getRedundancySuggestions(redundancies);
-  els.redundancyList.innerHTML = suggestions
+  setIfChanged(els.redundancyList, suggestions
     .map(s => `
       <div class="redundancy-item">
         <div class="redundancy-row">
@@ -144,7 +151,7 @@ function renderRedundancy(redundancies) {
         </div>
         <div class="redundancy-meta">${s.message}</div>
       </div>`)
-    .join('');
+    .join(''));
 }
 
 // ── Render ─────────────────────────────────────────────────────────────────

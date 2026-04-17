@@ -12,17 +12,28 @@
   const MATCHERS = [
     {
       platform: 'claude',
-      test: url => url.includes('api.anthropic.com') && url.includes('/v1/messages')
+      // Matches both direct API calls (API-key users) and claude.ai's own
+      // backend proxy calls (subscription users who don't use an API key)
+      test: url =>
+        (url.includes('api.anthropic.com') && url.includes('/v1/messages')) ||
+        (url.includes('claude.ai') && url.includes('/completion'))
     },
     {
       platform: 'openai',
-      test: url => (url.includes('api.openai.com') || url.includes('chat.openai.com/backend-api'))
-                && url.includes('/chat/completions')
+      // Covers api.openai.com, chat.openai.com, and chatgpt.com (current domain)
+      test: url =>
+        (url.includes('api.openai.com') ||
+         url.includes('chat.openai.com/backend-api') ||
+         url.includes('chatgpt.com/backend-api')) &&
+        (url.includes('/chat/completions') || url.includes('/conversation'))
     },
     {
       platform: 'gemini',
-      test: url => url.includes('generativelanguage.googleapis.com')
-                && url.includes('generateContent')
+      // Matches both :generateContent and :streamGenerateContent variants
+      // (the latter has uppercase G so a plain includes('generateContent') misses it)
+      test: url =>
+        url.includes('generativelanguage.googleapis.com') &&
+        (url.includes(':generateContent') || url.includes(':streamGenerateContent'))
     }
   ];
 
