@@ -183,15 +183,15 @@ body {
 
 .main > section {
   background: var(--surface);
-  padding: 14px 16px;
+  padding: 10px 16px;
 }
 
 /* ── Gauge section ── */
 .gauge-section {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 16px !important;
+  gap: 14px;
+  padding: 12px 16px !important;
 }
 
 .gauge-wrap {
@@ -199,8 +199,8 @@ body {
 }
 
 .gauge-svg {
-  width: 120px;
-  height: 120px;
+  width: 108px;
+  height: 108px;
   transform: rotate(-90deg);
 }
 
@@ -298,7 +298,7 @@ body {
 .score-section {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .score-row {
@@ -316,7 +316,7 @@ body {
 }
 
 .score-value {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 800;
   letter-spacing: -0.5px;
   color: var(--green);
@@ -368,7 +368,7 @@ body {
 .context-section {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .context-row {
@@ -439,9 +439,9 @@ body {
 .quota-section {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   background: var(--surface);
-  padding: 14px 16px;
+  padding: 10px 16px;
 }
 
 .quota-blocked {
@@ -559,7 +559,7 @@ body {
 .tab-nav {
   display: flex;
   background: var(--surface);
-  padding: 8px 16px 0;
+  padding: 6px 16px 0;
   gap: 2px;
   border-bottom: 1px solid var(--border);
 }
@@ -592,8 +592,8 @@ body {
 .tab-panel {
   display: none;
   background: var(--surface);
-  padding: 12px 16px;
-  max-height: 180px;
+  padding: 10px 16px;
+  max-height: 130px;
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--surface-2) transparent;
@@ -769,7 +769,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 16px;
+  padding: 6px 16px;
   background: var(--surface);
   border-top: 1px solid var(--border);
 }

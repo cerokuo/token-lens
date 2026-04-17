@@ -208,6 +208,7 @@ function render(data) {
   els.msgCount.textContent   = `${(data.messageCount?.user || 0) + (data.messageCount?.ai || 0)} messages`;
 
   // Context
+  const usagePct = data.contextUsage || 0;
   els.contextPct.textContent          = `${Math.round(usagePct)}%`;
   setContextBar(usagePct);
   els.modelTag.textContent            = data.model || '—';
@@ -320,10 +321,17 @@ function renderQuota(data) {
   }
 
   // ── Weekly bar ─────────────────────────────────────────────────────────
-  $id('weeklyVals').textContent      = `${formatTokensShort(weekly.used)} / ${formatTokensShort(weekly.limit)}`;
-  setQuotaBar('weeklyBar', weekly.pct, wkStatus);
-  $id('weeklyRemaining').textContent = formatTokensShort(weekly.remaining);
-  $id('weeklyBurn').textContent      = minutesUntilBlocked !== null ? formatMinutes(minutesUntilBlocked) : '';
+  const weeklyUsed      = weekly.used      ?? 0;
+  const weeklyLimit     = weekly.limit     ?? 0;
+  const weeklyPct       = weekly.pct       ?? 0;
+  const weeklyRemaining = weekly.remaining ?? 0;
+  const weeklyValsEl    = $id('weeklyVals');
+  const weeklyRemEl     = $id('weeklyRemaining');
+  const weeklyBurnEl    = $id('weeklyBurn');
+  if (weeklyValsEl)  weeklyValsEl.textContent  = `${formatTokensShort(weeklyUsed)} / ${formatTokensShort(weeklyLimit)}`;
+  setQuotaBar('weeklyBar', weeklyPct, wkStatus);
+  if (weeklyRemEl)   weeklyRemEl.textContent   = formatTokensShort(weeklyRemaining);
+  if (weeklyBurnEl)  weeklyBurnEl.textContent  = minutesUntilBlocked !== null ? formatMinutes(minutesUntilBlocked) : '';
 }
 
 // ── Source badge ──────────────────────────────────────────────────────────
@@ -351,17 +359,25 @@ document.addEventListener('click', e => {
 // Receives ANALYSIS_UPDATE pushed by content.js (intercept hits, API results,
 // quota updates). This is what makes the popup update in real time without
 // waiting for the 3s poll cycle.
-chrome.runtime.onMessage.addListener((msg) => {
-  if (msg.type === 'ANALYSIS_UPDATE' && msg.data) render(msg.data);
+// Guard: only accept messages from the currently active tab so background
+// AI tabs don't inject stale data when the user is on a non-AI page.
+let activeTabId = null;
+
+chrome.runtime.onMessage.addListener((msg, sender) => {
+  if (msg.type !== 'ANALYSIS_UPDATE' || !msg.data) return;
+  if (activeTabId !== null && sender.tab?.id !== activeTabId) return;
+  render(msg.data);
 });
 
 // ── Bootstrap ─────────────────────────────────────────────────────────────
 function bootstrap() {
   chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
-    if (!tabs[0]) { render(null); return; }
+    if (!tabs[0]) { activeTabId = null; render(null); return; }
 
+    activeTabId = tabs[0].id;
     chrome.tabs.sendMessage(tabs[0].id, { type: 'GET_ANALYSIS' }, response => {
       if (chrome.runtime.lastError || !response?.data) {
+        activeTabId = null;
         render(null);
         return;
       }
