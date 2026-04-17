@@ -282,6 +282,8 @@ function renderQuota(data) {
   section.style.display = 'flex';
 
   const { fiveHour, weekly, minutesUntilBlocked } = data.quota;
+  if (!fiveHour || !weekly) { section.style.display = 'none'; return; }
+
   const fiveStatus = fiveHour.status || 'ok';
   const wkStatus   = weekly.status   || 'ok';
 

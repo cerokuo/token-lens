@@ -1,6 +1,6 @@
 {
   "name": "token-lens",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "Chrome extension to track token usage across Claude, ChatGPT, and Gemini",
   "scripts": {
     "test": "jest",
